@@ -99,3 +99,37 @@ func (p *Postgres) SaveNotification(
 
 	return nil
 }
+
+func (p *Postgres) GetNotificationStatus(
+	ctx context.Context,
+	notificationID string,
+) (string, string, string, error) {
+	query := `
+	SELECT status, channel, user_id
+	FROM notifications
+	WHERE id = $1;
+	`
+
+	var status string
+	var channel string
+	var userID string
+
+	err := p.conn.QueryRow(
+		ctx,
+		query,
+		notificationID,
+	).Scan(
+		&status,
+		&channel,
+		&userID,
+	)
+
+	if err != nil {
+		return "", "", "", fmt.Errorf(
+			"failed to get notification status: %w",
+			err,
+		)
+	}
+
+	return status, channel, userID, nil
+}
