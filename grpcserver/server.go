@@ -2,11 +2,13 @@ package grpcserver
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"notification-agent/proto"
 	"notification-agent/storage"
 
+	"github.com/jackc/pgx/v5"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -39,6 +41,13 @@ func (s *Server) GetNotificationStatus(
 		req.GetNotificationId(),
 	)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, status.Error(
+				codes.NotFound,
+				"notification not found",
+			)
+		}
+
 		return nil, status.Error(
 			codes.Internal,
 			fmt.Sprintf("failed to get notification status: %v", err),

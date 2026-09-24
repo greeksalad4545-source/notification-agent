@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"notification-agent/models"
@@ -125,6 +126,10 @@ func (p *Postgres) GetNotificationStatus(
 	)
 
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return "", "", "", pgx.ErrNoRows
+		}
+
 		return "", "", "", fmt.Errorf(
 			"failed to get notification status: %w",
 			err,

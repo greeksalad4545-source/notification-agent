@@ -16,6 +16,7 @@ import (
 	"notification-agent/storage"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 func main() {
@@ -81,6 +82,8 @@ func main() {
 		grpcServer,
 		notificationGRPCServer,
 	)
+
+	reflection.Register(grpcServer)
 
 	go func() {
 		fmt.Println("gRPC server listening on :50051")
