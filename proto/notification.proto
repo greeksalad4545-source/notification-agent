@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package notification;
+
+option go_package = "notification-agent/proto";
+
+service NotificationService {
+  rpc GetNotificationStatus(GetNotificationStatusRequest)
+      returns (GetNotificationStatusResponse);
+}
+
+message GetNotificationStatusRequest {
+  string notification_id = 1;
+}
+
+message GetNotificationStatusResponse {
+  string notification_id = 1;
+  string status = 2;
+  string channel = 3;
+  string user_id = 4;
+}
