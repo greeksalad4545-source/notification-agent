@@ -6,7 +6,7 @@ import (
 	"notification-agent/models"
 )
 
-func TestEmailHandlerSend(t *testing.T) {
+func TestEmailHandlerRequiresRecipient(t *testing.T) {
 	notification := models.Notification{
 		ID:      "test-email-handler",
 		UserID:  "user-123",
@@ -19,8 +19,15 @@ func TestEmailHandlerSend(t *testing.T) {
 
 	err := handler.Send(notification)
 
-	if err != nil {
-		t.Fatalf("expected no error, got %v", err)
+	if err == nil {
+		t.Fatal("expected error when recipient email is missing")
+	}
+
+	if err.Error() != "recipient email is required" {
+		t.Fatalf(
+			"expected recipient email error, got %v",
+			err,
+		)
 	}
 }
 

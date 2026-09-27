@@ -10,6 +10,8 @@ type Config struct {
 	ServiceBusQueue            string
 	ServiceBusConnectionString string
 	DatabaseURL                string
+	KeyVaultName               string
+	SendGridFrom               string
 }
 
 func Load() (Config, error) {
@@ -18,6 +20,8 @@ func Load() (Config, error) {
 		ServiceBusQueue:            os.Getenv("SERVICE_BUS_QUEUE"),
 		ServiceBusConnectionString: os.Getenv("SERVICE_BUS_CONNECTION_STRING"),
 		DatabaseURL:                os.Getenv("DATABASE_URL"),
+		KeyVaultName:               os.Getenv("KEY_VAULT_NAME"),
+		SendGridFrom:               os.Getenv("SENDGRID_FROM"),
 	}
 
 	if cfg.ServiceBusQueue == "" {
@@ -30,6 +34,14 @@ func Load() (Config, error) {
 
 	if cfg.DatabaseURL == "" {
 		return Config{}, fmt.Errorf("DATABASE_URL is required")
+	}
+
+	if cfg.KeyVaultName == "" {
+		return Config{}, fmt.Errorf("KEY_VAULT_NAME is required")
+	}
+
+	if cfg.SendGridFrom == "" {
+		return Config{}, fmt.Errorf("SENDGRID_FROM is required")
 	}
 
 	return cfg, nil

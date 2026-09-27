@@ -65,10 +65,18 @@ func (f *fakeNotificationStore) SaveNotification(
 	return f.err
 }
 
+type fakeEmailHandler struct{}
+
+func (fakeEmailHandler) Send(
+	notification models.Notification,
+) error {
+	return nil
+}
+
 func newTestProcessor() *processor.Processor {
 	return processor.New(
 		map[string]handlers.NotificationHandler{
-			"email":  handlers.EmailHandler{},
+			"email":  fakeEmailHandler{},
 			"sms":    handlers.SMSHandler{},
 			"in-app": handlers.InAppHandler{},
 		},

@@ -14,6 +14,7 @@ import (
 	"notification-agent/handlers"
 	"notification-agent/processor"
 	"notification-agent/proto"
+	"notification-agent/secrets"
 	"notification-agent/servicebus"
 	"notification-agent/storage"
 
@@ -73,8 +74,16 @@ func main() {
 
 	fmt.Println("Connected to Azure Service Bus")
 
+	keyVault, err := secrets.NewKeyVault(cfg.KeyVaultName)
+	if err != nil {
+		fmt.Println("Failed to create Key Vault client:", err)
+		return
+	}
+
+	fmt.Println("Connected to Azure Key Vault")
+
 	notificationHandlers := map[string]handlers.NotificationHandler{
-		"email":  handlers.EmailHandler{},
+		"email":  handlers.NewEmailHandler(keyVault, cfg.SendGridFrom),
 		"sms":    handlers.SMSHandler{},
 		"in-app": handlers.InAppHandler{},
 	}

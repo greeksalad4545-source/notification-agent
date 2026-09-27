@@ -12,6 +12,8 @@ func clearConfigEnv(t *testing.T) {
 	os.Unsetenv("SERVICE_BUS_QUEUE")
 	os.Unsetenv("SERVICE_BUS_CONNECTION_STRING")
 	os.Unsetenv("DATABASE_URL")
+	os.Unsetenv("KEY_VAULT_NAME")
+	os.Unsetenv("SENDGRID_FROM")
 }
 
 func TestLoadSuccess(t *testing.T) {
@@ -22,6 +24,8 @@ func TestLoadSuccess(t *testing.T) {
 	os.Setenv("SERVICE_BUS_QUEUE", "test-queue")
 	os.Setenv("SERVICE_BUS_CONNECTION_STRING", "test-connection-string")
 	os.Setenv("DATABASE_URL", "postgres://test")
+	os.Setenv("KEY_VAULT_NAME", "test-vault")
+	os.Setenv("SENDGRID_FROM", "test@example.com")
 
 	cfg, err := Load()
 
@@ -36,6 +40,14 @@ func TestLoadSuccess(t *testing.T) {
 	if cfg.DatabaseURL != "postgres://test" {
 		t.Errorf("expected database URL postgres://test, got %s", cfg.DatabaseURL)
 	}
+
+	if cfg.KeyVaultName != "test-vault" {
+		t.Errorf("expected Key Vault name test-vault, got %s", cfg.KeyVaultName)
+	}
+
+	if cfg.SendGridFrom != "test@example.com" {
+		t.Errorf("expected SendGrid from test@example.com, got %s", cfg.SendGridFrom)
+	}
 }
 
 func TestLoadMissingQueue(t *testing.T) {
@@ -44,6 +56,8 @@ func TestLoadMissingQueue(t *testing.T) {
 
 	os.Setenv("SERVICE_BUS_CONNECTION_STRING", "test-connection-string")
 	os.Setenv("DATABASE_URL", "postgres://test")
+	os.Setenv("KEY_VAULT_NAME", "test-vault")
+	os.Setenv("SENDGRID_FROM", "test@example.com")
 
 	_, err := Load()
 
@@ -58,6 +72,8 @@ func TestLoadMissingServiceBusConnectionString(t *testing.T) {
 
 	os.Setenv("SERVICE_BUS_QUEUE", "test-queue")
 	os.Setenv("DATABASE_URL", "postgres://test")
+	os.Setenv("KEY_VAULT_NAME", "test-vault")
+	os.Setenv("SENDGRID_FROM", "test@example.com")
 
 	_, err := Load()
 
@@ -72,6 +88,8 @@ func TestLoadMissingDatabaseURL(t *testing.T) {
 
 	os.Setenv("SERVICE_BUS_QUEUE", "test-queue")
 	os.Setenv("SERVICE_BUS_CONNECTION_STRING", "test-connection-string")
+	os.Setenv("KEY_VAULT_NAME", "test-vault")
+	os.Setenv("SENDGRID_FROM", "test@example.com")
 
 	_, err := Load()
 
