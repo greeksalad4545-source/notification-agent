@@ -7,4 +7,5 @@ type Notification struct {
 	Subject        string `json:"subject"`
 	Message        string `json:"message"`
 	RecipientEmail string `json:"recipient_email"`
+	RecipientPhone string `json:"recipient_phone"`
 }

@@ -11,6 +11,8 @@ import (
 	"notification-agent/storage"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/messaging/azservicebus"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 type MessageReceiver interface {
@@ -60,6 +62,14 @@ func (a *Agent) Run(ctx context.Context) error {
 }
 
 func (a *Agent) ProcessNext(ctx context.Context) error {
+	tracer := otel.Tracer("notification-agent")
+
+	ctx, span := tracer.Start(
+		ctx,
+		"notification.process",
+	)
+	defer span.End()
+
 	fmt.Println("Waiting for notification...")
 
 	message, err := a.consumer.Receive(ctx)
@@ -97,6 +107,12 @@ func (a *Agent) ProcessNext(ctx context.Context) error {
 
 	fmt.Println("Notification parsed successfully:")
 	fmt.Printf("%+v\n", notification)
+
+	span.SetAttributes(
+		attribute.String("notification.id", notification.ID),
+		attribute.String("notification.channel", notification.Channel),
+		attribute.String("notification.user_id", notification.UserID),
+	)
 
 	err = a.processor.Process(notification)
 	if err != nil {

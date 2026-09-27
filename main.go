@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"notification-agent/agent"
 	"notification-agent/config"
@@ -17,6 +18,7 @@ import (
 	"notification-agent/secrets"
 	"notification-agent/servicebus"
 	"notification-agent/storage"
+	"notification-agent/telemetry"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -38,6 +40,26 @@ func main() {
 		syscall.SIGTERM,
 	)
 	defer stop()
+
+	tracerShutdown, err := telemetry.InitTracer(ctx)
+	if err != nil {
+		fmt.Println("Failed to initialize telemetry:", err)
+		return
+	}
+
+	defer func() {
+		shutdownCtx, cancel := context.WithTimeout(
+			context.Background(),
+			5*time.Second,
+		)
+		defer cancel()
+
+		if err := tracerShutdown(shutdownCtx); err != nil {
+			fmt.Println("Failed to shut down telemetry:", err)
+		}
+	}()
+
+	fmt.Println("Telemetry initialized")
 
 	db, err := storage.NewPostgres(ctx, cfg.DatabaseURL)
 	if err != nil {
@@ -84,7 +106,7 @@ func main() {
 
 	notificationHandlers := map[string]handlers.NotificationHandler{
 		"email":  handlers.NewEmailHandler(keyVault, cfg.SendGridFrom),
-		"sms":    handlers.SMSHandler{},
+		"sms":    handlers.NewSMSHandler(keyVault),
 		"in-app": handlers.InAppHandler{},
 	}
 

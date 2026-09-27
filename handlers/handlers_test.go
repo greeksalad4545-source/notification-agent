@@ -31,7 +31,7 @@ func TestEmailHandlerRequiresRecipient(t *testing.T) {
 	}
 }
 
-func TestSMSHandlerSend(t *testing.T) {
+func TestSMSHandlerRequiresRecipient(t *testing.T) {
 	notification := models.Notification{
 		ID:      "test-sms-handler",
 		UserID:  "user-123",
@@ -43,8 +43,15 @@ func TestSMSHandlerSend(t *testing.T) {
 
 	err := handler.Send(notification)
 
-	if err != nil {
-		t.Fatalf("expected no error, got %v", err)
+	if err == nil {
+		t.Fatal("expected error when recipient phone is missing")
+	}
+
+	if err.Error() != "recipient phone is required" {
+		t.Fatalf(
+			"expected recipient phone error, got %v",
+			err,
+		)
 	}
 }
 
