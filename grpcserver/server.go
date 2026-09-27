@@ -6,29 +6,32 @@ import (
 	"fmt"
 
 	"notification-agent/proto"
-	"notification-agent/storage"
 
 	"github.com/jackc/pgx/v5"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-type Server struct {
-	proto.UnimplementedNotificationServiceServer
-	db *storage.Postgres
+type NotificationStore interface {
+	GetNotificationStatus(
+		ctx context.Context,
+		notificationID string,
+	) (string, string, string, error)
 }
 
-func NewServer(db *storage.Postgres) *Server {
-	return &Server{
-		db: db,
-	}
+type Server struct {
+	proto.UnimplementedNotificationServiceServer
+	db NotificationStore
+}
+
+func NewServer(db NotificationStore) *Server {
+	return &Server{db: db}
 }
 
 func (s *Server) GetNotificationStatus(
 	ctx context.Context,
 	req *proto.GetNotificationStatusRequest,
 ) (*proto.GetNotificationStatusResponse, error) {
-
 	if req.GetNotificationId() == "" {
 		return nil, status.Error(
 			codes.InvalidArgument,
@@ -36,10 +39,12 @@ func (s *Server) GetNotificationStatus(
 		)
 	}
 
-	statusValue, channel, userID, err := s.db.GetNotificationStatus(
-		ctx,
-		req.GetNotificationId(),
-	)
+	statusValue, channel, userID, err :=
+		s.db.GetNotificationStatus(
+			ctx,
+			req.GetNotificationId(),
+		)
+
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, status.Error(
@@ -50,7 +55,10 @@ func (s *Server) GetNotificationStatus(
 
 		return nil, status.Error(
 			codes.Internal,
-			fmt.Sprintf("failed to get notification status: %v", err),
+			fmt.Sprintf(
+				"failed to get notification status: %v",
+				err,
+			),
 		)
 	}
 

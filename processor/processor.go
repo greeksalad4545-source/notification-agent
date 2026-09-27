@@ -7,23 +7,27 @@ import (
 	"notification-agent/models"
 )
 
-func Process(notification models.Notification) error {
+type Processor struct {
+	handlers map[string]handlers.NotificationHandler
+}
 
-	var handler handlers.NotificationHandler
+func New(
+	handlers map[string]handlers.NotificationHandler,
+) *Processor {
+	return &Processor{
+		handlers: handlers,
+	}
+}
 
-	switch notification.Channel {
-
-	case "email":
-		handler = handlers.EmailHandler{}
-
-	case "sms":
-		handler = handlers.SMSHandler{}
-
-	case "in-app":
-		handler = handlers.InAppHandler{}
-
-	default:
-		return fmt.Errorf("unsupported notification channel: %s", notification.Channel)
+func (p *Processor) Process(
+	notification models.Notification,
+) error {
+	handler, ok := p.handlers[notification.Channel]
+	if !ok {
+		return fmt.Errorf(
+			"unsupported notification channel: %s",
+			notification.Channel,
+		)
 	}
 
 	return handler.Send(notification)

@@ -11,6 +11,8 @@ import (
 	"notification-agent/agent"
 	"notification-agent/config"
 	"notification-agent/grpcserver"
+	"notification-agent/handlers"
+	"notification-agent/processor"
 	"notification-agent/proto"
 	"notification-agent/servicebus"
 	"notification-agent/storage"
@@ -20,7 +22,11 @@ import (
 )
 
 func main() {
-	cfg := config.Load()
+	cfg, err := config.Load()
+	if err != nil {
+		fmt.Println("Configuration error:", err)
+		return
+	}
 
 	fmt.Println("Configuration loaded")
 	fmt.Println("Service Bus Queue:", cfg.ServiceBusQueue)
@@ -67,6 +73,14 @@ func main() {
 
 	fmt.Println("Connected to Azure Service Bus")
 
+	notificationHandlers := map[string]handlers.NotificationHandler{
+		"email":  handlers.EmailHandler{},
+		"sms":    handlers.SMSHandler{},
+		"in-app": handlers.InAppHandler{},
+	}
+
+	notificationProcessor := processor.New(notificationHandlers)
+
 	grpcListener, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		fmt.Println("Failed to start gRPC listener:", err)
@@ -96,6 +110,7 @@ func main() {
 	notificationAgent := agent.New(
 		consumer,
 		db,
+		notificationProcessor,
 	)
 
 	fmt.Println("Notification Agent starting...")

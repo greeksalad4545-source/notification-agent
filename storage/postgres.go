@@ -17,7 +17,10 @@ type Postgres struct {
 func NewPostgres(ctx context.Context, databaseURL string) (*Postgres, error) {
 	conn, err := pgx.Connect(ctx, databaseURL)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to PostgreSQL: %w", err)
+		return nil, fmt.Errorf(
+			"failed to connect to PostgreSQL: %w",
+			err,
+		)
 	}
 
 	return &Postgres{
@@ -73,7 +76,18 @@ func (p *Postgres) SaveNotification(
 		status,
 		processed_at
 	)
-	VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
+	VALUES (
+		$1,
+		$2,
+		$3,
+		$4,
+		$5,
+		$6,
+		CASE
+			WHEN $6 = 'processed' THEN CURRENT_TIMESTAMP
+			ELSE NULL
+		END
+	)
 	ON CONFLICT (id)
 	DO UPDATE SET
 		status = EXCLUDED.status,
